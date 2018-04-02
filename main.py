@@ -10,7 +10,7 @@ class Cache:
             self.index_dic[op].append(index)
         else:
             self.index_dic[op].append(index)
-			
+ 
 
 if __name__ == '__main__':
     # You should not modify this part.
@@ -49,7 +49,7 @@ if __name__ == '__main__':
             query = q_line.split()
             operator = query[1]
             operands = query[::2]
-
+            
             if(operator == "and"):
                 and_result=[]
                 in_pre_index = False
@@ -74,8 +74,7 @@ if __name__ == '__main__':
                     for cached_index in pre_index[base_op]:
                         for op in operands:
                             find_and = True
-                            find = source[cached_index-1][1].find(op)
-                            if(find<0):
+                            if(not(op in source[cached_index-1][1])):
                                 find_and = False
                                 break
                         if(find_and):
@@ -84,8 +83,7 @@ if __name__ == '__main__':
                     for title in source:
                         find_and = True
                         for op in operands:
-                            find = title[1].find(op)
-                            if(find>=0):
+                            if(op in title[1]):
                                 cache.cache_op_index(op,title[0])
                             else:
                                 find_and = False
@@ -109,8 +107,7 @@ if __name__ == '__main__':
                         out_op.append(op)
                 for op in out_op:
                     for title in source:
-                        find = title[1].find(op)
-                        if(find>=0):
+                        if(op in title[1]):
                             or_result.append(title[0])
                             cache.cache_op_index(op,title[0])
                 or_result = list(set(or_result))
@@ -136,20 +133,17 @@ if __name__ == '__main__':
                         else:
                             not_list = []
                             for base_index in pre_index[operands[0]]:
-                                find = source[base_index-1][1].find(not_op)
-                                if(find>=0):
+                                if(not_op in source[base_index-1][1]):
                                     not_list.append(base_index)
                             not_result = list(set(not_result) - set(not_list) )
                 else:
                     not_result = [ ]
                     for title in source:
                         find_not = False
-                        find_first = title[1].find(operands[0])
-                        if(find_first>=0):
+                        if(operands[0] in title[1]):
                             cache.cache_op_index(operands[0],title[0])
                             for n_op in operands[1:]:
-                                find_n_op = title[1].find(n_op)
-                                if(find_n_op>=0):
+                                if(n_op in title[1]):
                                     find_not = True
                                     break 
                             if(find_not==False):
@@ -169,4 +163,4 @@ if __name__ == '__main__':
     # TODO output result
         with open(args.output, 'w') as output_file:
             output_file.write(index_list_str)
-            			
+             
