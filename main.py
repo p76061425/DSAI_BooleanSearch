@@ -1,40 +1,17 @@
 import pandas as pd
 
 class Cache:
-    def __init__(self,source):
-        self.data = source
-        self.operands_cnt_dic = {}
+    def __init__(self):
         self.index_dic = {}
-        
-    def cnting_operand(self,queries):
-        for q_line in queries:
-            query = q_line.split()
-            operator = query[1]
-            operands = query[::2]
-            for op_base in operands:
-                op_cnt =0 
-                for q_line_search in queries:
-                    query_search = q_line_search.split()
-                    operator_search = query_search[1]
-                    operands_search = query_search[::2]
-                    for op in operands_search:
-                        if(op == op_base):
-                            op_cnt += 1
-                    self.operands_cnt_dic[op_base] = op_cnt
-        return self.operands_cnt_dic
 
-    def index_source(self,op_cnt_list):
-        for op in op_cnt_list.items():
-            if(op[1]>=2):
-                index_list = []
-                for title in self.data:
-                    find = title[1].find(op[0])
-                    if(find>=0):
-                        index_list.append(title[0])
-                self.index_dic[op[0]] = index_list
-        return self.index_dic
+    def cache_op_index(self,op,index):
+        if op not in self.index_dic:
+            self.index_dic[op] = []
+            self.index_dic[op].append(index)
+        else:
+            self.index_dic[op].append(index)
+			
 
-		
 if __name__ == '__main__':
     # You should not modify this part.
     import argparse
@@ -64,10 +41,9 @@ if __name__ == '__main__':
         queries = q_f.readlines()
         index_list = []
         
-        cache = Cache(source)
-        op_cnt_list = cache.cnting_operand(queries)
-        pre_index = cache.index_source(op_cnt_list)
-
+        cache = Cache()
+        pre_index = cache.index_dic 
+        
     # TODO compute query result
         for q_line in queries:
             query = q_line.split()
@@ -109,9 +85,10 @@ if __name__ == '__main__':
                         find_and = True
                         for op in operands:
                             find = title[1].find(op)
-                            if(find==-1):
+                            if(find>=0):
+                                cache.cache_op_index(op,title[0])
+                            else:
                                 find_and = False
-                                break
                         if(find_and):
                             and_result.append(str(title[0]) )
                     
@@ -123,19 +100,27 @@ if __name__ == '__main__':
                 
             elif(operator == "or"):
                 or_result = []
+                in_cache_op = []
+                out_op = []
                 for op in operands:
-                    if(op in pre_index):
-                        or_result = list( set(or_result) | set(pre_index[op]) )
+                    if op in pre_index:
+                        in_cache_op.append(op)
                     else:
-                        for title in source:
-                            find = title[1].find(op)
-                            if(find>=0):
-                                or_result.append(title[0])
-                            
-                if(len(or_result)==0):
-                    or_result.append("0")  
-                
+                        out_op.append(op)
+                for op in out_op:
+                    for title in source:
+                        find = title[1].find(op)
+                        if(find>=0):
+                            or_result.append(title[0])
+                            cache.cache_op_index(op,title[0])
                 or_result = list(set(or_result))
+                
+                for op in in_cache_op:
+                    or_result = list( set(or_result) | set(pre_index[op]) )
+
+                if(len(or_result)==0):
+                    or_result.append(0)  
+                
                 or_result.sort()
                 or_result=[str(x) for x in or_result]
                 or_result_str = ','.join(or_result)
@@ -161,6 +146,7 @@ if __name__ == '__main__':
                         find_not = False
                         find_first = title[1].find(operands[0])
                         if(find_first>=0):
+                            cache.cache_op_index(operands[0],title[0])
                             for n_op in operands[1:]:
                                 find_n_op = title[1].find(n_op)
                                 if(find_n_op>=0):
@@ -170,7 +156,7 @@ if __name__ == '__main__':
                                 not_result.append( title[0] )
                         
                     if(len(not_result)==0):
-                        not_result.append("0")           
+                        not_result.append(0)           
                 
                 if(operands[0] in pre_index):
                     not_result.sort()
@@ -179,8 +165,8 @@ if __name__ == '__main__':
                 index_list.append(not_result_str)
 
         index_list_str = "\n".join(index_list)
-        
+                
     # TODO output result
         with open(args.output, 'w') as output_file:
             output_file.write(index_list_str)
-            
+            			
